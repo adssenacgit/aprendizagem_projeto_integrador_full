@@ -1,0 +1,6 @@
+[submodule "projeto_integrador_frontend"]
+	path = projeto_integrador_frontend
+	url = https://github.com/victormacedo996/projeto_integrador_frontend
+[submodule "projeto_integrador_backend"]
+	path = projeto_integrador_backend
+	url = https://github.com/victormacedo996/projeto_integrador_backend

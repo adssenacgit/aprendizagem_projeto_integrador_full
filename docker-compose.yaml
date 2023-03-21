@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: .
+    container_name: api
+    ports:
+      - 8080:8080
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SERVER_PORT: 8080
+      CRON_ESTUDANTES: 0 39 09 * * *
+      UPLOAD_DIR: /Users/Public/uploads01
+      AUDIENCE: https://strategies_backend/api
+      
+      DB_USER: myuser
+      DB_PASSWORD: mypass
+      DB_HOST: db
+      DB_PORT: 3306
+      DATABASE: api
+
+      HIBERNATE_DIALECT: org.hibernate.dialect.MySQL8Dialect
+      DDL_AUTO: update
+
+      MULTIPART: true
+      FILE_SIZE_THRESHOLD: 2KB
+      MAX_FILE_SIZE: 200MB
+      MAX_REQUEST_SIZE: 215MB
+
+      SQL_PLATFORM: mysql
+
+      ISSUER_URI: https://dev-w1gjm8bhgii82b6s.us.auth0.com/
+
+  db:
+    image: mysql:8.0
+    container_name: api-db
+    command: --default-authentication-plugin=mysql_native_password
+    volumes:
+      - ./src/main/resources/init.sql:/docker-entrypoint-initdb.d/1.sql
+    environment:
+      MYSQL_USER: api
+      MYSQL_PASSWORD: 123
+      MYSQL_DATABASE: api
+      MYSQL_ROOT_PASSWORD: root
+    
+    ports:
+      - '3306:3306'
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -P 3306 -proot | grep 'mysqld is alive' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5

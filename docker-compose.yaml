@@ -1,49 +1,93 @@
 version: '3.8'
 
 services:
-  api:
-    build:
-      context: .
-    container_name: api
+
+  # API gateway
+  krakend_ce:
+    # The :watch image restarts the service automatically when the configuration files change.
+    # Do not use this image in production, it's meant to speed up your testing and development.
+    image: devopsfaith/krakend:watch
+    container_name: api-gateway
+    networks:
+      - project-network
+    volumes:
+      - ./config/krakend:/etc/krakend
     ports:
-      - 8080:8080
+      - "1234:1234"
+      - "8080:8080"
+      - "8090:8090"
+    depends_on:
+      - grupo7
+    command: ["run", "-d", "-c", "/etc/krakend/krakend.json"]
+
+  # OPERATIONAL MONITORING
+  grafana:
+    image: grafana/grafana:9.1.2
+    container_name: grafana
+    networks:
+      - project-network
+    ports:
+      - "4000:3000"
+    volumes:
+      - "./config/grafana/datasources/all.yml:/etc/grafana/provisioning/datasources/all.yml"
+      - "./config/grafana/dashboards/all.yml:/etc/grafana/provisioning/dashboards/all.yml"
+      - "./config/grafana/krakend:/var/lib/grafana/dashboards/krakend"
+    depends_on:
+      - krakend_ce
+      - influxdb
+
+  # OPERATIONAL MONITORING
+  influxdb:
+    image: influxdb:1.8.10
+    container_name: influxdb
+    networks:
+      - project-network
+    environment:
+      - "INFLUXDB_DB=krakend"
+      - "INFLUXDB_USER=krakend-dev"
+      - "INFLUXDB_USER_PASSWORD=pas5w0rd"
+      - "INFLUXDB_ADMIN_USER=admin"
+      - "INFLUXDB_ADMIN_PASSWORD=supersecretpassword"
+    ports:
+      - "8086:8086"
+    
+    depends_on:
+      - krakend_ce
+
+  # Group 7 API - SENAC COIN
+  grupo7:
+    build:
+      context: ./aprendizagem_ctx_senac_coin
+    container_name: senac_coin
+    networks:
+      - project-network
+    # Uncomment the lines bellow to access swagger
+    # ports:
+    #   - 8081:8080
     depends_on:
       db:
         condition: service_healthy
     environment:
-      SERVER_PORT: 8080
-      CRON_ESTUDANTES: 0 39 09 * * *
-      UPLOAD_DIR: /Users/Public/uploads01
-      AUDIENCE: https://strategies_backend/api
-      
-      DB_USER: myuser
+      DB_USERNAME: senac_coin
       DB_PASSWORD: mypass
-      DB_HOST: db
+      DB_URL: db
       DB_PORT: 3306
-      DATABASE: api
-
-      HIBERNATE_DIALECT: org.hibernate.dialect.MySQL8Dialect
-      DDL_AUTO: update
-
-      MULTIPART: true
-      FILE_SIZE_THRESHOLD: 2KB
-      MAX_FILE_SIZE: 200MB
-      MAX_REQUEST_SIZE: 215MB
-
-      SQL_PLATFORM: mysql
-
-      ISSUER_URI: https://dev-w1gjm8bhgii82b6s.us.auth0.com/
-
+      DB_DATABASE: senacCoin
+      CONNECTION_POOL_MAX_SIZE: 2
+      CONNECTION_POOL_MIN_SIZE: 5
+      JAVA_TOOL_OPTIONS: "-Xms50M -Xmx50M"
+  
+  # Test database
   db:
     image: mysql:8.0
-    container_name: api-db
+    container_name: db
+    networks:
+      - project-network
     command: --default-authentication-plugin=mysql_native_password
     volumes:
-      - ./src/main/resources/init.sql:/docker-entrypoint-initdb.d/1.sql
+      - ./aprendizagem_ctx_senac_coin/src/main/resources/mysql.init/senacCoinTables.sql:/docker-entrypoint-initdb.d/1.sql
+      - ./aprendizagem_ctx_senac_coin/src/main/resources/mysql.init/createUsers.sql:/docker-entrypoint-initdb.d/2.sql
     environment:
-      MYSQL_USER: api
-      MYSQL_PASSWORD: 123
-      MYSQL_DATABASE: api
       MYSQL_ROOT_PASSWORD: root
     
     ports:
@@ -53,3 +97,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+networks:
+  project-network:
+    external: false
+    name: project-network

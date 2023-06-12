@@ -7,6 +7,17 @@
     "cache_ttl": "300s",
     "endpoints": [
         {
+            "@comment": "Endpoint de autenticacao, retorna o JWT",
+            "endpoint": "/login",
+            "method": "POST",
+            "backend": [
+                {
+                    "host": ["http://autenticacao:8080"],
+                    "url_pattern": "/v1/login"
+                }
+            ]
+        },
+        {
             "@comment": "Senac coin GET endpoints",
             "endpoint": "/senaccoin/{action}/{id}",
             "backend": [
@@ -14,7 +25,18 @@
                     "host": ["http://grupo7:8080"],
                     "url_pattern": "/senaccoin/{action}/{id}"
                 }
-            ]
+            ],
+            "extra_config": {
+                "auth/validator": {
+                  "alg": "RS256",
+                  "roles_key": "roles",
+                  "roles": ["a", "b"],
+                  "jwk_url": "http://autenticacao:8080/v1/.well-known/jwks",
+                  "disable_jwk_security": true,
+                  "cache": true,
+                  "cookie_key": "cookie_jwt"
+                }
+            }
         },
         {
             "@comment": "Senac coin POST endpoint",

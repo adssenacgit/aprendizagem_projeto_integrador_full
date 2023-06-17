@@ -17,7 +17,7 @@ services:
       - "8080:8080"
       - "8090:8090"
     depends_on:
-      - grupo7
+      - senac_coin
     command: ["run", "-d", "-c", "/etc/krakend/krakend.json"]
 
   # OPERATIONAL MONITORING
@@ -49,13 +49,13 @@ services:
       - "INFLUXDB_ADMIN_USER=admin"
       - "INFLUXDB_ADMIN_PASSWORD=supersecretpassword"
     ports:
-      - "8086:8086"
+      - "8090:8086"
     
     depends_on:
       - krakend_ce
 
   # Group 7 API - SENAC COIN
-  grupo7:
+  senac_coin:
     build:
       context: ./aprendizagem_ctx_senac_coin
     container_name: senac_coin
@@ -63,7 +63,7 @@ services:
       - project-network
     # Uncomment the lines bellow to access swagger
     # ports:
-    #   - 8081:8080
+    #   - 8087:8080
     depends_on:
       db:
         condition: service_healthy
@@ -76,7 +76,36 @@ services:
       CONNECTION_POOL_MAX_SIZE: 2
       CONNECTION_POOL_MIN_SIZE: 5
       JAVA_TOOL_OPTIONS: "-Xms50M -Xmx50M"
-  
+
+  # gestao_academica:
+  #     build:
+  #       context: ./aprendizagem_ctx_gestao_academica
+  #     container_name: gestao_academica
+  #     networks:
+  #       - project-network
+  #     # Uncomment the lines bellow to access swagger
+  #     # ports:
+  #     #   - 8087:8080
+  #     depends_on:
+  #       db:
+  #         condition: service_healthy
+  #     environment:
+  #       DB_USERNAME: senac_coin
+  #       DB_PASSWORD: mypass
+  #       DB_URL: db
+  #       DB_PORT: 3306
+  #       DB_DATABASE: senacCoin
+  #       CONNECTION_POOL_MAX_SIZE: 2
+  #       CONNECTION_POOL_MIN_SIZE: 5
+  #       JAVA_TOOL_OPTIONS: "-Xms50M -Xmx50M"
+
+  auth:
+      build:
+        context: ./auth
+      container_name: auth
+      networks:
+        - project-network
+    
   # Test database
   db:
     image: mysql:8.0

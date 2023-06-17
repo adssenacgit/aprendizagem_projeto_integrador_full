@@ -9,6 +9,15 @@
         {
             "@comment": "Senac coin GET endpoints",
             "endpoint": "/senaccoin/{action}/{id}",
+            "extra_config": {
+                "auth/validator": {
+                    "alg": "HS256",
+                    "roles": ["a", "b"],
+                    "jwk_url": "http://auth:8080/v1/keys",
+                    "cache": true,
+                    "disable_jwk_security": true
+                }
+            },        
             "backend": [
                 {
                     "host": ["http://grupo7:8080"],
@@ -24,6 +33,29 @@
                 {
                     "host": ["http://grupo7:8080"],
                     "url_pattern": "/senaccoin"
+                }
+            ]
+        },
+        {
+            "@comment": "auth",
+            "endpoint": "/login",
+            "method": "POST",
+            "extra_config": {
+                "auth/signer": {
+                    "alg": "HS256",
+                    "jwk_url": "http://auth:8080/v1/keys",
+                    "keys_to_sign": [
+                        "access_token",
+                        "refresh_token"
+                    ],
+                    "kid": "sim2",
+                    "disable_jwk_security": true
+                }
+           },      
+            "backend": [
+                {
+                    "host": ["http://auth:8080"],
+                    "url_pattern": "/v1/login"
                 }
             ]
         }
@@ -43,7 +75,7 @@
         "telemetry/logging": {
           "level": "DEBUG",
           "prefix": "[KRAKEND]",
-          "syslog": false,
+          "syslog": true,
           "stdout": true
         },
         "security/cors": {

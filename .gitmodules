@@ -9,3 +9,9 @@
 [submodule "aprendizagem_ctx_gestao_academica"]
 	path = aprendizagem_ctx_gestao_academica
 	url = https://github.com/adssenacgit/aprendizagem_ctx_gestao_academica
+[submodule "aprendizagem_ctx_controle_acesso"]
+	path = aprendizagem_ctx_controle_acesso
+	url = https://github.com/adssenacgit/aprendizagem_ctx_controle_acesso.git
+[submodule "aprendizagem_ctx_academico"]
+	path = aprendizagem_ctx_academico
+	url = https://github.com/adssenacgit/aprendizagem_ctx_academico
